@@ -6,7 +6,10 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="DocumentGenerator" level="trace" additivity="false">
+    <Logger name="de.fhm.DataProcessing.DocumentGenerator" level="trace" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Logger name="de.fhm.Database.DataConnection" level="trace" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
     <Root level="error">
