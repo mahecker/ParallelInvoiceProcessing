@@ -8,16 +8,19 @@ import java.sql.Statement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Document;
+
+import de.fhm.DataPreparation.RawDataExtruder;
 
 public class DataSource {
   // ######################################
   // +++++++++ Member-Variables +++++++++++
   // ######################################
   private Connection connection;
-  private int amntInvoices;
+  private int invoiceCount;
   private int[] invoiceIds;
 
-  private static final int DEFAULT_AMNT = 1;
+  private static final int DEFAULT_INVOICE_COUNT = 1;
   private static final String USER = "mh";
   private static final String PWD = "mh";
   private static final String DRIVER = "com.mysql.jdbc.Driver";
@@ -30,12 +33,12 @@ public class DataSource {
   // +++++++++++ Constructors +++++++++++++
   // ######################################
   public DataSource() {
-	setAmntInvoices(DEFAULT_AMNT);
+	setInvoiceCount(DEFAULT_INVOICE_COUNT);
 	setConnection();
   }
 
-  public DataSource(int amntInvoices) {
-	setAmntInvoices(amntInvoices);
+  public DataSource(int invoiceCount) {
+	setInvoiceCount(invoiceCount);
 	setConnection();
   }
 
@@ -57,12 +60,12 @@ public class DataSource {
 	}
   }
 
-  private int getAmntInvoices() {
-	return this.amntInvoices;
+  private int getInvoiceCount() {
+	return this.invoiceCount;
   }
 
-  private void setAmntInvoices(int amntInvoices) {
-	this.amntInvoices = amntInvoices;
+  private void setInvoiceCount(int invoiceCount) {
+	this.invoiceCount = invoiceCount;
   }
 
   private String getInvoiceIds() {
@@ -80,27 +83,42 @@ public class DataSource {
   }
 
   private void setInvoiceIds(ResultSet rs) throws SQLException {
-	int recordCount = getRecordCount(rs);
+	// Korrektur von invoiceCount:
+	// Wenn Datenquelle weniger als die angefragte Menge an Rechnungen hat.
+	if(getRecordCount(rs) != getInvoiceCount()) {
+	  setInvoiceCount(getRecordCount(rs));
+	}
 
-	if (recordCount != 0) {
-	  this.invoiceIds = new int[recordCount];
+	if (getInvoiceCount() != 0) {
+	  this.invoiceIds = new int[getInvoiceCount()];
 	  while (rs.next()) {
 		this.invoiceIds[rs.getRow() - 1] = rs.getInt("cs.cs_bill_cdemo_sk");
 	  }
 	}
+	logger.debug("/-> Total amount of Invoice-IDs processed: " + getInvoiceCount());
   }
+
   // --------------------------------------
 
   // ######################################
   // +++++++++++ Class-Methods ++++++++++++
   // ######################################
-  public ResultSet generateData() {
+  public Document[] generateData() {
 	ResultSet rs = null;
+	Document[] docs = null;
 
 	try {
 	  setInvoiceIds(getRandomInvoiceIds());
 	  rs = getInvoices();
 	  logger.trace("/-> Total amount of Invoice-Positions: " + getRecordCount(rs));
+	  
+	  //BEGIN TODO
+	  RawDataExtruder rde = new RawDataExtruder(getInvoiceCount());
+	  long start = System.currentTimeMillis();
+	  docs = rde.test(rs);
+	  logger.trace("/-> Building XML-Documents: " + (System.currentTimeMillis() - start) + " ms.");
+	  //END TODO
+	  
 	} catch (SQLException e) {
 	  logger.error(e.getMessage());
 	} finally {
@@ -112,8 +130,8 @@ public class DataSource {
 		logger.error(e.getMessage());
 	  }
 	}
-	
-	return rs;
+
+	return docs;
   }
 
   private ResultSet getRandomInvoiceIds() throws SQLException {
@@ -159,8 +177,8 @@ public class DataSource {
 
 	sql = "SELECT cs.cs_bill_cdemo_sk FROM ";
 	sql += "(SELECT DISTINCT(cs_bill_cdemo_sk) FROM catalog_sales) AS cs ";
-	sql += "ORDER BY RAND() LIMIT " + getAmntInvoices() + ";";
-	logger.debug("/-> Query used for Invoice-IDs: " + sql);
+	sql += "ORDER BY RAND() LIMIT " + getInvoiceCount() + ";";
+//	logger.debug("/-> Query used for Invoice-IDs: " + sql);
 
 	return sql;
   }
@@ -178,7 +196,7 @@ public class DataSource {
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
 	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk;";
-	logger.debug("/-> Query used for Invoices: " + sql);
+//	logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
   }
