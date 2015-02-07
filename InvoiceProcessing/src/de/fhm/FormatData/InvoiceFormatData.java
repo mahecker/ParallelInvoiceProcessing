@@ -1,4 +1,4 @@
-package de.fhm.DataPreparation;
+package de.fhm.FormatData;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class RawDataExtruder {
+public class InvoiceFormatData {
   // ######################################
   // +++++++++ Member-Variables +++++++++++
   // ######################################
@@ -21,18 +21,18 @@ public class RawDataExtruder {
   private Document[] invoicesXML;
 
   private static final int DEFAULT_INVOICE_COUNT = 1;
-  private static final Logger logger = LogManager.getLogger(RawDataExtruder.class);
+  private static final Logger logger = LogManager.getLogger(InvoiceFormatData.class);
 
   // --------------------------------------
 
   // ######################################
   // +++++++++++ Constructors +++++++++++++
   // ######################################
-  public RawDataExtruder() {
+  public InvoiceFormatData() {
 	setInvoiceCount(DEFAULT_INVOICE_COUNT);
   }
 
-  public RawDataExtruder(int invoiceCount) {
+  public InvoiceFormatData(int invoiceCount) {
 	setInvoiceCount(invoiceCount);
   }
 
@@ -57,14 +57,14 @@ public class RawDataExtruder {
 
   // In Anlehnung an:
   // http://www.developer.com/xml/article.php/3329001/Converting-JDBC-Result-Sets-to-XML.htm
-  public Document[] test(ResultSet rs) {
+  public Document[] formatData(ResultSet rs) {
 	DocumentBuilderFactory factory = null;
 	DocumentBuilder builder = null;
 	Document doc = null;
 	Element customer = null;
 	Element positions = null;
 	int invoiceID = 0;
-	int currentSlot = 0;
+	int currentPosition = 0;
 	double netTotal = 0;
 	invoicesXML = new Document[getInvoiceCount()];
 
@@ -87,8 +87,8 @@ public class RawDataExtruder {
 			positions.appendChild(tax);
 			positions.appendChild(totalSum);
 
-			invoicesXML[currentSlot] = doc;
-			currentSlot += 1;
+			invoicesXML[currentPosition] = doc;
+			currentPosition += 1;
 			netTotal = 0;
 		  }
 		  doc = builder.newDocument();
@@ -128,8 +128,8 @@ public class RawDataExtruder {
 	  positions.appendChild(tax);
 	  positions.appendChild(totalSum);
 
-	  invoicesXML[currentSlot] = doc;
-	  currentSlot += 1;
+	  invoicesXML[currentPosition] = doc;
+	  currentPosition += 1;
 	  netTotal = 0;
 	} catch (SQLException | ParserConfigurationException e) {
 	  logger.error(e.getMessage());

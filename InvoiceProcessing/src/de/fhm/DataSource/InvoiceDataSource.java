@@ -1,4 +1,4 @@
-package de.fhm.Database;
+package de.fhm.DataSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,9 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
-import de.fhm.DataPreparation.RawDataExtruder;
+import de.fhm.FormatData.InvoiceFormatData;
 
-public class DataSource {
+public class InvoiceDataSource {
   // ######################################
   // +++++++++ Member-Variables +++++++++++
   // ######################################
@@ -23,21 +23,21 @@ public class DataSource {
   private static final int DEFAULT_INVOICE_COUNT = 1;
   private static final String USER = "mh";
   private static final String PWD = "mh";
-  private static final String DRIVER = "com.mysql.jdbc.Driver";
+  private static final String JDBC_CLASS = "com.mysql.jdbc.Driver";
   private static final String URL = "jdbc:mysql://localhost:3306/test";
-  private static final Logger logger = LogManager.getLogger(DataSource.class);
+  private static final Logger logger = LogManager.getLogger(InvoiceDataSource.class);
 
   // --------------------------------------
 
   // ######################################
   // +++++++++++ Constructors +++++++++++++
   // ######################################
-  public DataSource() {
+  public InvoiceDataSource() {
 	setInvoiceCount(DEFAULT_INVOICE_COUNT);
 	setConnection();
   }
 
-  public DataSource(int invoiceCount) {
+  public InvoiceDataSource(int invoiceCount) {
 	setInvoiceCount(invoiceCount);
 	setConnection();
   }
@@ -53,7 +53,7 @@ public class DataSource {
 
   public void setConnection() {
 	try {
-	  Class.forName(DRIVER);
+	  Class.forName(JDBC_CLASS);
 	  this.connection = DriverManager.getConnection(URL, USER, PWD);
 	} catch (ClassNotFoundException | SQLException e) {
 	  logger.error(e.getMessage());
@@ -82,10 +82,12 @@ public class DataSource {
 	return invoiceIds;
   }
 
-  private void setInvoiceIds(ResultSet rs) throws SQLException {
+  private boolean setInvoiceIds(ResultSet rs) throws SQLException {
 	// Korrektur von invoiceCount:
 	// Wenn Datenquelle weniger als die angefragte Menge an Rechnungen hat.
-	if(getRecordCount(rs) != getInvoiceCount()) {
+	boolean hasRecords = false;
+
+	if (getRecordCount(rs) != getInvoiceCount()) {
 	  setInvoiceCount(getRecordCount(rs));
 	}
 
@@ -94,8 +96,11 @@ public class DataSource {
 	  while (rs.next()) {
 		this.invoiceIds[rs.getRow() - 1] = rs.getInt("cs.cs_bill_cdemo_sk");
 	  }
+	  hasRecords = true;
 	}
 	logger.debug("/-> Total amount of Invoice-IDs processed: " + getInvoiceCount());
+
+	return hasRecords;
   }
 
   // --------------------------------------
@@ -103,22 +108,29 @@ public class DataSource {
   // ######################################
   // +++++++++++ Class-Methods ++++++++++++
   // ######################################
-  public Document[] generateData() {
-	ResultSet rs = null;
+  public Document[] generateData(long start) {
 	Document[] docs = null;
+	ResultSet rs = null;
+	InvoiceFormatData formatter = null;
+	int invoicePositionsCount = 0;
+	long lastMeasurement = start;
 
 	try {
-	  setInvoiceIds(getRandomInvoiceIds());
-	  rs = getInvoices();
-	  logger.trace("/-> Total amount of Invoice-Positions: " + getRecordCount(rs));
-	  
-	  //BEGIN TODO
-	  RawDataExtruder rde = new RawDataExtruder(getInvoiceCount());
-	  long start = System.currentTimeMillis();
-	  docs = rde.test(rs);
-	  logger.trace("/-> Building XML-Documents: " + (System.currentTimeMillis() - start) + " ms.");
-	  //END TODO
-	  
+	  if (setInvoiceIds(getRandomInvoiceIds())) {
+		rs = getInvoices();
+		logger.trace("/-> [END] Getting Data from Source: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
+		invoicePositionsCount = getRecordCount(rs);
+		if (invoicePositionsCount != 0) {
+		  formatter = new InvoiceFormatData(getInvoiceCount());
+		  logger.trace("/-> [START] Formating Data...");
+		  lastMeasurement = System.currentTimeMillis();
+		  docs = formatter.formatData(rs);
+		  logger.trace("/-> [END] Formatting Data: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
+		} else
+		  logger.error("No Invoice-Positions available!");
+	  } else
+		logger.error("No Invoices available!");
+	  logger.trace("/-> Total amount of Invoice-Positions: " + invoicePositionsCount);
 	} catch (SQLException e) {
 	  logger.error(e.getMessage());
 	} finally {
@@ -178,7 +190,7 @@ public class DataSource {
 	sql = "SELECT cs.cs_bill_cdemo_sk FROM ";
 	sql += "(SELECT DISTINCT(cs_bill_cdemo_sk) FROM catalog_sales) AS cs ";
 	sql += "ORDER BY RAND() LIMIT " + getInvoiceCount() + ";";
-//	logger.debug("/-> Query used for Invoice-IDs: " + sql);
+	// logger.debug("/-> Query used for Invoice-IDs: " + sql);
 
 	return sql;
   }
@@ -196,7 +208,7 @@ public class DataSource {
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
 	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk;";
-//	logger.debug("/-> Query used for Invoices: " + sql);
+	// logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
   }

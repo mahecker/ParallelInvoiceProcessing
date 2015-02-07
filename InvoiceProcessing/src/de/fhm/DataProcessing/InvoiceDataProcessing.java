@@ -15,15 +15,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
-import de.fhm.Database.DataSource;
+import de.fhm.DataSource.InvoiceDataSource;
 
-public class DocumentGenerator {
-  private static final int INVOICE_COUNT = 50000; // Max: 153.252
-  private static final Logger logger = LogManager.getLogger(DocumentGenerator.class);
+public class InvoiceDataProcessing {
+  private static final int INVOICE_COUNT = 10; // Max: 153.252
+  private static final Logger logger = LogManager.getLogger(InvoiceDataProcessing.class);
   private static final long INITIALIZATION_TIME = System.currentTimeMillis();
 
   public static void main(String[] args) {
-	DataSource source = new DataSource(INVOICE_COUNT);
+	InvoiceDataSource source = new InvoiceDataSource(INVOICE_COUNT);
 	long start;
 	Document[] docs;
 
@@ -31,18 +31,17 @@ public class DocumentGenerator {
 	logger.trace("### Starting Invoice Processing... ###");
 	logger.trace("--------------------------------------");
 
-	logger.trace("/-> Start generating Data...");
+	logger.trace("/-> [START] Getting Data from Source...");
 	start = System.currentTimeMillis();
-	docs = source.generateData();
-	logger.trace("/-> Finish generating Data: " + (System.currentTimeMillis() - start) + " ms.");
+	docs = source.generateData(start);
 
-//	for (int i = 0; i < docs.length; i++) {
-//	  try {
-//		printDocument(docs[i], System.out);
-//	  } catch (IOException | TransformerException e) {
-//		logger.error(e.getMessage());
-//	  }
-//	}
+	// for (int i = 0; i < docs.length; i++) {
+	// try {
+	// printDocument(docs[i], System.out);
+	// } catch (IOException | TransformerException e) {
+	// logger.error(e.getMessage());
+	// }
+	// }
 
 	logger.trace("-------------------------------------------");
 	logger.trace("### Ending Invoice Processing: " + (System.currentTimeMillis() - INITIALIZATION_TIME) + " ms. ###");
