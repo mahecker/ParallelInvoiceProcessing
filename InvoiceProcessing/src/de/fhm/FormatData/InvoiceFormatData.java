@@ -69,7 +69,7 @@ public class InvoiceFormatData {
 	Element position = null;
 
 	boolean nextInvoice = true;
-	boolean nextPosition;
+	boolean hasNextInvoicePosition;
 	int currentInvoiceID = 0;
 	int nextInvoiceID = 0;
 	int currentPosition = 0;
@@ -81,8 +81,8 @@ public class InvoiceFormatData {
 	  builder = factory.newDocumentBuilder();
 	  rsmd = rs.getMetaData();
 
-	  nextPosition = rs.next();
-	  while (nextPosition) {
+	  hasNextInvoicePosition = rs.next();
+	  while (hasNextInvoicePosition) {
 		if (nextInvoice) {
 		  doc = builder.newDocument();
 		  customer = getCustomerFromResultSet(rs);
@@ -94,15 +94,20 @@ public class InvoiceFormatData {
 		position = getPositionFromResultSet(rs);
 		positions.appendChild(position);
 		sumListPrice += rs.getDouble("cs.cs_ext_list_price");
-		nextPosition = rs.next();
-		nextInvoiceID = rs.getInt("cs.cs_bill_cdemo_sk");
-		if ((nextPosition && (currentInvoiceID != nextInvoiceID)) || !(nextPosition)) {
+		
+		hasNextInvoicePosition = rs.next();
+		if (hasNextInvoicePosition) {
+		  nextInvoiceID = rs.getInt("cs.cs_bill_cdemo_sk");
+		}
+		
+		if ((hasNextInvoicePosition && (currentInvoiceID != nextInvoiceID)) || !(hasNextInvoicePosition)) {
 		  positions = addTotalsAndTax(positions, sumListPrice);
 		  customer.appendChild(positions);
 		  docs[currentPosition] = doc;
 		  currentPosition++;
 		  sumListPrice = 0;
-		  if (nextPosition) {
+		  
+		  if (hasNextInvoicePosition) {
 			nextInvoice = true;
 		  }
 		} else {
@@ -110,7 +115,7 @@ public class InvoiceFormatData {
 		}
 	  }
 	} catch (SQLException | ParserConfigurationException e) {
-	  logger.error(e.getMessage());
+	  logger.error("TEST: " + e.getMessage());
 	}
 
 	return docs;

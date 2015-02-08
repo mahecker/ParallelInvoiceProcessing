@@ -18,7 +18,7 @@ import org.w3c.dom.Document;
 import de.fhm.DataSource.InvoiceDataSource;
 
 public class InvoiceDataProcessing {
-  private static final int INVOICE_COUNT = 2; // Max: 153.252 (Max-Heap: ~147.250)
+  private static final int INVOICE_COUNT = 3; // Max: 153.252 (Max-Heap: ~147.250)
   private static final Logger logger = LogManager.getLogger(InvoiceDataProcessing.class);
   private static final long INITIALIZATION_TIME = System.currentTimeMillis();
 
