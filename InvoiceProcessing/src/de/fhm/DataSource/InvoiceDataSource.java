@@ -83,10 +83,9 @@ public class InvoiceDataSource {
   }
 
   private boolean setInvoiceIds(ResultSet rs) throws SQLException {
-	// Korrektur von invoiceCount:
-	// Wenn Datenquelle weniger als die angefragte Menge an Rechnungen hat.
 	boolean hasRecords = false;
 
+	// If receive is different from the required amount of invoices
 	if (getRecordCount(rs) != getInvoiceCount()) {
 	  setInvoiceCount(getRecordCount(rs));
 	}
@@ -130,7 +129,7 @@ public class InvoiceDataSource {
 		  logger.error("No Invoice-Positions available!");
 	  } else
 		logger.error("No Invoices available!");
-	  logger.trace("/-> Total amount of Invoice-Positions: " + invoicePositionsCount);
+	  logger.trace("/-> Total Invoice-Positions: " + invoicePositionsCount);
 	} catch (SQLException e) {
 	  logger.error(e.getMessage());
 	} finally {
