@@ -8,8 +8,9 @@ import de.fhm.DataOutput.InvoiceDataOutput;
 import de.fhm.DataSource.InvoiceDataSource;
 
 public class InvoiceDataProcessing {
-  public static final int INVOICE_COUNT = 10; // Max: 153.252 (Max-Heap: ~147.250)
-  public static final int POSITIONS_PER_INVOICE = 1;
+  public static final int INVOICE_COUNT = 1; // Max: 153.252 (Max-Heap: ~147.250)
+  public static final int POSITIONS_PER_INVOICE = 5;
+  public static final String PATH_TO_XSL_FILE = "./src/de/fhm/DataOutput/Invoice_Template.xsl";
   private static final Logger logger = LogManager.getLogger(InvoiceDataProcessing.class);
   private static final long INITIALIZATION_TIME = System.currentTimeMillis();
 
@@ -31,6 +32,5 @@ public class InvoiceDataProcessing {
 	logger.trace("-------------------------------------------");
 	logger.trace("### Ending Invoice Processing: " + (System.currentTimeMillis() - INITIALIZATION_TIME) + " ms. ###");
 	logger.trace("-------------------------------------------");
-
   }
 }

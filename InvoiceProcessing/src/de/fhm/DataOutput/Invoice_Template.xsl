@@ -30,7 +30,7 @@
 			<fo:page-sequence master-reference="DIN-A4">
 				<fo:static-content flow-name="header">
 					<fo:block text-align="right">
-						<fo:external-graphic src="./Logo2.gif"
+						<fo:external-graphic src="./src/de/fhm/DataOutput/Logo2.gif"
 							content-height="2cm" />
 					</fo:block>
 				</fo:static-content>

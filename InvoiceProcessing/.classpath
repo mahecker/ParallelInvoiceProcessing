@@ -5,5 +5,12 @@
 	<classpathentry kind="lib" path="/usr/local/apache-log4j-2.1-bin/log4j-api-2.1.jar"/>
 	<classpathentry kind="lib" path="/usr/local/apache-log4j-2.1-bin/log4j-core-2.1.jar"/>
 	<classpathentry kind="lib" path="/usr/share/java/mysql-connector-java-5.1.16.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/build/fop.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/lib/xmlgraphics-commons-1.5.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/lib/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/lib/commons-io-1.3.1.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/lib/avalon-framework-4.2.0.jar"/>
+	<classpathentry kind="lib" path="/usr/local/fop-1.1/lib/batik-all-1.7.jar"/>
+	<classpathentry kind="lib" path="/usr/local/apache-log4j-2.1-bin/log4j-jcl-2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
