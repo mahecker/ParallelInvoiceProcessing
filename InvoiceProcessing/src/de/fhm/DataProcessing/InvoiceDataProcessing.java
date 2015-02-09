@@ -18,12 +18,13 @@ import org.w3c.dom.Document;
 import de.fhm.DataSource.InvoiceDataSource;
 
 public class InvoiceDataProcessing {
-  private static final int INVOICE_COUNT = 3; // Max: 153.252 (Max-Heap: ~147.250)
+  public static final int INVOICE_COUNT = 100000; // Max: 153.252 (Max-Heap: ~147.250)
+  public static final int POSITIONS_PER_INVOICE = 5;
   private static final Logger logger = LogManager.getLogger(InvoiceDataProcessing.class);
   private static final long INITIALIZATION_TIME = System.currentTimeMillis();
 
   public static void main(String[] args) {
-	InvoiceDataSource source = new InvoiceDataSource(INVOICE_COUNT);
+	InvoiceDataSource source = new InvoiceDataSource();
 	Document[] docs = null;
 	long start;
 
@@ -35,13 +36,13 @@ public class InvoiceDataProcessing {
 	start = System.currentTimeMillis();
 	docs = source.generateData(start);
 
-	for (int i = 0; i < docs.length; i++) {
-	  try {
-		printDocument(docs[i], System.out);
-	  } catch (IOException | TransformerException e) {
-		logger.error(e.getMessage());
-	  }
-	}
+//	for (int i = 0; i < docs.length; i++) {
+//	  try {
+//		printDocument(docs[i], System.out);
+//	  } catch (IOException | TransformerException e) {
+//		logger.error(e.getMessage());
+//	  }
+//	}
 
 	logger.trace("-------------------------------------------");
 	logger.trace("### Ending Invoice Processing: " + (System.currentTimeMillis() - INITIALIZATION_TIME) + " ms. ###");

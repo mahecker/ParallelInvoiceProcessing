@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
+import de.fhm.DataProcessing.InvoiceDataProcessing;
 import de.fhm.FormatData.InvoiceFormatData;
 
 public class InvoiceDataSource {
@@ -20,7 +21,6 @@ public class InvoiceDataSource {
   private int invoiceCount;
   private int[] invoiceIds;
 
-  private static final int DEFAULT_INVOICE_COUNT = 1;
   private static final String USER = "mh";
   private static final String PWD = "mh";
   private static final String JDBC_CLASS = "com.mysql.jdbc.Driver";
@@ -33,12 +33,7 @@ public class InvoiceDataSource {
   // +++++++++++ Constructors +++++++++++++
   // ######################################
   public InvoiceDataSource() {
-	setInvoiceCount(DEFAULT_INVOICE_COUNT);
-	setConnection();
-  }
-
-  public InvoiceDataSource(int invoiceCount) {
-	setInvoiceCount(invoiceCount);
+	setInvoiceCount(InvoiceDataProcessing.INVOICE_COUNT);
 	setConnection();
   }
 
@@ -187,8 +182,9 @@ public class InvoiceDataSource {
 	String sql;
 
 	sql = "SELECT cs.cs_bill_cdemo_sk FROM ";
-	sql += "(SELECT DISTINCT(cs_bill_cdemo_sk) FROM catalog_sales) AS cs ";
-	sql += "ORDER BY RAND() LIMIT " + getInvoiceCount() + ";";
+	sql += "(SELECT cs_bill_cdemo_sk ";
+	sql += "FROM catalog_sales GROUP BY cs_bill_cdemo_sk HAVING COUNT(cs_bill_cdemo_sk) >= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + ") AS cs ";
+	sql += "ORDER BY RAND() LIMIT " + InvoiceDataProcessing.INVOICE_COUNT + ";";
 	// logger.debug("/-> Query used for Invoice-IDs: " + sql);
 
 	return sql;
@@ -197,6 +193,7 @@ public class InvoiceDataSource {
   private String getQueryInvoiceDetail() {
 	String sql;
 
+	/* W/O limiting positions per invoice
 	sql = "SELECT c.c_customer_sk, c.c_first_name, c.c_last_name, ";
 	sql += "ca.ca_street_name, ca.ca_street_type, ca.ca_street_number, ca.ca_zip, ca.ca_county, ca.ca_state, ca.ca_country, ";
 	sql += "cs.cs_bill_cdemo_sk, ";
@@ -207,7 +204,27 @@ public class InvoiceDataSource {
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
 	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk;";
-	// logger.debug("/-> Query used for Invoices: " + sql);
+	logger.debug("/-> Query used for Invoices: " + sql);
+	*/
+
+	sql = "SELECT c.c_customer_sk, c.c_first_name, c.c_last_name, ";
+	sql += "ca.ca_street_name, ca.ca_street_type, ca.ca_street_number, ca.ca_zip, ca.ca_county, ca.ca_state, ca.ca_country, ";
+	sql += "cs.cs_bill_cdemo_sk, ";
+	sql += "i.i_item_sk, i.i_category, i.i_class, i.i_brand, i.i_product_name, i.i_units, ";
+	sql += "cs.cs_quantity, cs.cs_list_price, cs.cs_ext_list_price ";
+	sql += "FROM (";
+	sql += "SELECT cs_bill_cdemo_sk, cs_quantity, cs_list_price, cs_ext_list_price, cs_bill_customer_sk, cs_bill_addr_sk, cs_item_sk, ";
+    sql += "@rn := IF(@prev = cs_bill_cdemo_sk, @rn + 1, 1) AS rn, @prev := cs_bill_cdemo_sk ";
+    sql += "FROM catalog_sales ";
+    sql += "JOIN (SELECT @prev := NULL, @rn := 0) AS vars ";
+    sql += "ORDER BY cs_bill_cdemo_sk";
+	sql += ") AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk ";
+	sql += "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
+	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
+	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") AND ";
+	sql += "cs.rn <= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + " ";
+	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk, cs.rn;";
+//	logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
   }
