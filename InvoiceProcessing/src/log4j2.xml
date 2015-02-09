@@ -12,7 +12,10 @@
     <Logger name="de.fhm.DataSource.InvoiceDataSource" level="trace" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="de.fhm.FormatData.InvoiceDataFormat" level="trace" additivity="false">
+    <Logger name="de.fhm.DataFormat.InvoiceDataFormat" level="trace" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Logger name="de.fhm.DataOutput.InvoiceDataOutput" level="trace" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
     <Root level="error">
