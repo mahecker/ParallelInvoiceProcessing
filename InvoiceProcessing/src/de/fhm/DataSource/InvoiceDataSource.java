@@ -10,8 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
+import de.fhm.DataFormat.InvoiceDataFormat;
 import de.fhm.DataProcessing.InvoiceDataProcessing;
-import de.fhm.FormatData.InvoiceFormatData;
 
 public class InvoiceDataSource {
   // ######################################
@@ -105,7 +105,7 @@ public class InvoiceDataSource {
   public Document[] generateData(long start) {
 	Document[] docs = null;
 	ResultSet rs = null;
-	InvoiceFormatData formatter = null;
+	InvoiceDataFormat formatter = null;
 	int invoicePositionsCount = 0;
 	long lastMeasurement = start;
 
@@ -115,7 +115,7 @@ public class InvoiceDataSource {
 		logger.trace("/-> [END] Getting Data from Source: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
 		invoicePositionsCount = getRecordCount(rs);
 		if (invoicePositionsCount != 0) {
-		  formatter = new InvoiceFormatData(getInvoiceCount());
+		  formatter = new InvoiceDataFormat(getInvoiceCount());
 		  logger.trace("/-> [START] Formating Data...");
 		  lastMeasurement = System.currentTimeMillis();
 		  docs = formatter.formatData(rs);

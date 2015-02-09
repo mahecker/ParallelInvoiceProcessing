@@ -1,4 +1,4 @@
-package de.fhm.FormatData;
+package de.fhm.DataFormat;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -15,7 +15,7 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class InvoiceFormatData {
+public class InvoiceDataFormat {
   // ######################################
   // +++++++++ Member-Variables +++++++++++
   // ######################################
@@ -25,18 +25,18 @@ public class InvoiceFormatData {
   private ResultSetMetaData rsmd;
 
   private static final int DEFAULT_INVOICE_COUNT = 1;
-  private static final Logger logger = LogManager.getLogger(InvoiceFormatData.class);
+  private static final Logger logger = LogManager.getLogger(InvoiceDataFormat.class);
 
   // --------------------------------------
 
   // ######################################
   // +++++++++++ Constructors +++++++++++++
   // ######################################
-  public InvoiceFormatData() {
+  public InvoiceDataFormat() {
 	setInvoiceCount(DEFAULT_INVOICE_COUNT);
   }
 
-  public InvoiceFormatData(int invoiceCount) {
+  public InvoiceDataFormat(int invoiceCount) {
 	setInvoiceCount(invoiceCount);
   }
 
