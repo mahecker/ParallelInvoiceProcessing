@@ -95,7 +95,7 @@ public class InvoiceDataSource {
 	  }
 	  hasRecords = true;
 	}
-	logger.debug("Invoice-IDs: " + getInvoiceCount());
+	logger.debug("Invoice-IDs:\t\t" + getInvoiceCount() + " Inv.");
 
 	return hasRecords;
   }
@@ -116,7 +116,6 @@ public class InvoiceDataSource {
   public Document[] getDataFromSource() {
 	Document[] docs = null;
 	ResultSet rs = null;
-	InvoiceDataFormat formatter = null;
 	int invoicePositionsCount = 0;
 
 	logger.info("DataSource-Setup:\t" + getDurationSinceLastTimeStamp() + "ms.");
@@ -127,14 +126,16 @@ public class InvoiceDataSource {
 		logger.info("Invoice-Details:\t" + getDurationSinceLastTimeStamp() + "ms.");
 		invoicePositionsCount = getRecordCount(rs);
 		if (invoicePositionsCount != 0) {
-		  formatter = new InvoiceDataFormat(getInvoiceCount());
 		  logger.info("Total DataSource:\t" + (System.currentTimeMillis() - START_TIME_STAMP) + "ms.");
+
+		  // Measurement starts on instantiating a new class-object
+		  InvoiceDataFormat formatter = new InvoiceDataFormat(getInvoiceCount());
 		  docs = formatter.formatDataFromResultSet(rs);
 		} else
 		  logger.error("No Invoice-Positions available!");
 	  } else
 		logger.error("No Invoices available!");
-	  logger.debug("Invoice-Positions: " + invoicePositionsCount);
+	  logger.debug("Invoice-Positions:\t" + invoicePositionsCount + " Pos.");
 	} catch (SQLException e) {
 	  logger.error(e.getMessage());
 	} finally {
@@ -185,11 +186,17 @@ public class InvoiceDataSource {
   private String getQueryInvoiceId() {
 	String sql;
 
-	sql = "SELECT cs.cs_bill_cdemo_sk FROM ";
-	sql += "(SELECT cs_bill_cdemo_sk ";
-	sql += "FROM catalog_sales GROUP BY cs_bill_cdemo_sk HAVING COUNT(cs_bill_cdemo_sk) >= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + ") AS cs ";
-	sql += "ORDER BY RAND() LIMIT " + InvoiceDataProcessing.INVOICE_COUNT + ";";
-	logger.debug("/-> Query used for Invoice-IDs: " + sql);
+	sql = "SELECT cs.cs_bill_cdemo_sk, COUNT(cs.cs_item_sk) AS count ";
+	sql += "FROM (SELECT cs_bill_cdemo_sk, cs_item_sk FROM catalog_sales ";
+	sql += "WHERE cs_bill_cdemo_sk <> 0 AND cs_bill_cdemo_sk IS NOT NULL AND cs_bill_cdemo_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_bill_customer_sk <> 0 AND cs_bill_customer_sk IS NOT NULL AND cs_bill_customer_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_bill_addr_sk <> 0 AND cs_bill_addr_sk IS NOT NULL AND cs_bill_addr_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_item_sk <> 0 AND cs_item_sk IS NOT NULL AND cs_item_sk REGEXP ('^[0-9]') ";
+	sql += "ORDER BY RAND()) AS cs ";
+	sql += "GROUP BY cs.cs_bill_cdemo_sk ";
+	sql += "HAVING count >= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + " ";
+	sql += "ORDER BY count LIMIT " + InvoiceDataProcessing.INVOICE_COUNT;
+//	logger.debug("ID-Query:\t\t" + sql);
 
 	return sql;
   }
@@ -224,14 +231,18 @@ public class InvoiceDataSource {
 	sql += "@rn := IF(@prev = cs_bill_cdemo_sk, @rn + 1, 1) AS rn, @prev := cs_bill_cdemo_sk ";
 	sql += "FROM catalog_sales ";
 	sql += "JOIN (SELECT @prev := NULL, @rn := 0) AS vars ";
-	sql += "ORDER BY cs_bill_cdemo_sk";
+	sql += "WHERE cs_bill_cdemo_sk <> 0 AND cs_bill_cdemo_sk IS NOT NULL AND cs_bill_cdemo_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_bill_customer_sk <> 0 AND cs_bill_customer_sk IS NOT NULL AND cs_bill_customer_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_bill_addr_sk <> 0 AND cs_bill_addr_sk IS NOT NULL AND cs_bill_addr_sk REGEXP ('^[0-9]') AND ";
+	sql += "cs_item_sk <> 0 AND cs_item_sk IS NOT NULL AND cs_item_sk REGEXP ('^[0-9]') ";
+	sql += "ORDER BY cs_bill_cdemo_sk ";
 	sql += ") AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk ";
 	sql += "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
 	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") AND ";
 	sql += "cs.rn <= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + " ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk, cs.rn;";
-	logger.debug("/-> Query used for Invoices: " + sql);
+//	logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
   }
