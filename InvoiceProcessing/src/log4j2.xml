@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="ERROR">
+<Configuration status="INFO">
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
+<!--       <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %msg%n"/> -->
 <!--       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/> -->
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="de.fhm.DataProcessing.InvoiceDataProcessing" level="trace" additivity="false">
+    <Logger name="de.fhm.DataProcessing.InvoiceDataProcessing" level="INFO" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="de.fhm.DataSource.InvoiceDataSource" level="trace" additivity="false">
+    <Logger name="de.fhm.DataSource.InvoiceDataSource" level="INFO" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="de.fhm.DataFormat.InvoiceDataFormat" level="trace" additivity="false">
+    <Logger name="de.fhm.DataFormat.InvoiceDataFormat" level="INFO" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="de.fhm.DataOutput.InvoiceDataOutput" level="trace" additivity="false">
+    <Logger name="de.fhm.DataOutput.InvoiceDataOutput" level="INFO" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="org.apache.fop" level="INFO" additivity="false">
+    <Logger name="org.apache.fop" level="ERROR" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
     <Root level="error">

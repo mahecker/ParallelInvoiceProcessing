@@ -25,9 +25,42 @@ import org.w3c.dom.Document;
 import de.fhm.DataProcessing.InvoiceDataProcessing;
 
 public class InvoiceDataOutput {
-  private static final Logger logger = LogManager.getLogger(InvoiceDataOutput.class);
+  // ######################################
+  // +++++++++ Member-Variables +++++++++++
+  // ######################################
+  private long latestTimeStamp;
 
-  public void outputDataFromDocs(Document[] docs) {
+  private static final long START_TIME_STAMP = System.currentTimeMillis();
+  private static final Logger logger = LogManager.getLogger(InvoiceDataOutput.class);
+  
+  // --------------------------------------
+  
+  // ######################################
+  // +++++++++++ Constructors +++++++++++++
+  // ######################################
+  public InvoiceDataOutput() {
+	setLatestTimeStamp(START_TIME_STAMP);
+  }
+  
+  // --------------------------------------
+  
+  // ######################################
+  // +++++++++ Get-/Set-Methods +++++++++++
+  // ######################################
+  public long getLatestTimeStamp() {
+	return latestTimeStamp;
+  }
+
+  public void setLatestTimeStamp(long latestTimeStamp) {
+	this.latestTimeStamp = latestTimeStamp;
+  }
+  
+  // --------------------------------------
+
+  // ######################################
+  // +++++++++++ Class-Methods ++++++++++++
+  // ######################################
+  public boolean outputDataFromDocs(Document[] docs) {
 	NullOutputStream dev0 = new NullOutputStream();
 	Templates cachedXSLT;
 	FopFactory fopFactory;
@@ -35,6 +68,7 @@ public class InvoiceDataOutput {
 	try {
 	  cachedXSLT = getCachedXSLT();
 	  fopFactory = FopFactory.newInstance();
+	  logger.info("DataOutput-Setup:\t" + getDurationSinceLastTimeStamp() + "ms.");
 	  for (Document doc : docs) {
 		try {
 		  Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, dev0);
@@ -49,6 +83,11 @@ public class InvoiceDataOutput {
 	} catch (FOPException | TransformerException | IOException e) {
 	  logger.error(e.getMessage());
 	}
+	
+	logger.info("Generating PDFs:\t" + getDurationSinceLastTimeStamp() + "ms.");
+	logger.info("Total DataOutput:\t" + (System.currentTimeMillis() - START_TIME_STAMP) + "ms.");
+	
+	return true;
   }
 
   // In Anlehnung an:
@@ -64,4 +103,17 @@ public class InvoiceDataOutput {
 
 	return cachedXSLT;
   }
+  
+  private long getDurationSinceLastTimeStamp() {
+	long duration;
+	long currentTimeStamp;
+	
+	currentTimeStamp = System.currentTimeMillis();
+	duration = currentTimeStamp - getLatestTimeStamp();
+	setLatestTimeStamp(currentTimeStamp);
+
+	return duration;
+  }
+  
+  // --------------------------------------
 }

@@ -20,7 +20,9 @@ public class InvoiceDataSource {
   private Connection connection;
   private int invoiceCount;
   private int[] invoiceIds;
+  private long latestTimeStamp;
 
+  private static final long START_TIME_STAMP = System.currentTimeMillis();
   private static final String USER = "mh";
   private static final String PWD = "mh";
   private static final String JDBC_CLASS = "com.mysql.jdbc.Driver";
@@ -35,6 +37,7 @@ public class InvoiceDataSource {
   public InvoiceDataSource() {
 	setInvoiceCount(InvoiceDataProcessing.INVOICE_COUNT);
 	setConnection();
+	setLatestTimeStamp(START_TIME_STAMP);
   }
 
   // --------------------------------------
@@ -92,9 +95,17 @@ public class InvoiceDataSource {
 	  }
 	  hasRecords = true;
 	}
-	logger.debug("/-> Total amount of Invoice-IDs processed: " + getInvoiceCount());
+	logger.debug("Invoice-IDs: " + getInvoiceCount());
 
 	return hasRecords;
+  }
+
+  private long getLatestTimeStamp() {
+	return latestTimeStamp;
+  }
+
+  private void setLatestTimeStamp(long latestTimeStamp) {
+	this.latestTimeStamp = latestTimeStamp;
   }
 
   // --------------------------------------
@@ -102,29 +113,28 @@ public class InvoiceDataSource {
   // ######################################
   // +++++++++++ Class-Methods ++++++++++++
   // ######################################
-  public Document[] getDataFromSource(long start) {
+  public Document[] getDataFromSource() {
 	Document[] docs = null;
 	ResultSet rs = null;
 	InvoiceDataFormat formatter = null;
 	int invoicePositionsCount = 0;
-	long lastMeasurement = start;
 
+	logger.info("DataSource-Setup:\t" + getDurationSinceLastTimeStamp() + "ms.");
 	try {
 	  if (setInvoiceIds(getRandomInvoiceIds())) {
+		logger.info("Random Invoice-IDs:\t" + getDurationSinceLastTimeStamp() + "ms.");
 		rs = getInvoices();
-		logger.trace("/-> [END] Getting Data from Source: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
+		logger.info("Invoice-Details:\t" + getDurationSinceLastTimeStamp() + "ms.");
 		invoicePositionsCount = getRecordCount(rs);
 		if (invoicePositionsCount != 0) {
 		  formatter = new InvoiceDataFormat(getInvoiceCount());
-		  logger.trace("/-> [START] Formating Data...");
-		  lastMeasurement = System.currentTimeMillis();
+		  logger.info("Total DataSource:\t" + (System.currentTimeMillis() - START_TIME_STAMP) + "ms.");
 		  docs = formatter.formatDataFromResultSet(rs);
-		  logger.trace("/-> [END] Formatting Data: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
 		} else
 		  logger.error("No Invoice-Positions available!");
 	  } else
 		logger.error("No Invoices available!");
-	  logger.trace("/-> Total Invoice-Positions: " + invoicePositionsCount);
+	  logger.debug("Invoice-Positions: " + invoicePositionsCount);
 	} catch (SQLException e) {
 	  logger.error(e.getMessage());
 	} finally {
@@ -141,29 +151,23 @@ public class InvoiceDataSource {
   }
 
   private ResultSet getRandomInvoiceIds() throws SQLException {
-	long start;
 	Statement statement = null;
 	ResultSet rs = null;
 	String sql = getQueryInvoiceId();
 
 	statement = getConnection().createStatement();
-	start = System.currentTimeMillis();
 	rs = statement.executeQuery(sql);
-	logger.trace("/-> Execution of ID-Query: " + (System.currentTimeMillis() - start) + " ms.");
 
 	return rs;
   }
 
   private ResultSet getInvoices() throws SQLException {
-	long start;
 	Statement statement = null;
 	ResultSet rs = null;
 	String sql = getQueryInvoiceDetail();
 
 	statement = getConnection().createStatement();
-	start = System.currentTimeMillis();
 	rs = statement.executeQuery(sql);
-	logger.trace("/-> Execution of Invoice-Query: " + (System.currentTimeMillis() - start) + " ms.");
 
 	return rs;
   }
@@ -185,7 +189,7 @@ public class InvoiceDataSource {
 	sql += "(SELECT cs_bill_cdemo_sk ";
 	sql += "FROM catalog_sales GROUP BY cs_bill_cdemo_sk HAVING COUNT(cs_bill_cdemo_sk) >= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + ") AS cs ";
 	sql += "ORDER BY RAND() LIMIT " + InvoiceDataProcessing.INVOICE_COUNT + ";";
-	// logger.debug("/-> Query used for Invoice-IDs: " + sql);
+	logger.debug("/-> Query used for Invoice-IDs: " + sql);
 
 	return sql;
   }
@@ -193,19 +197,22 @@ public class InvoiceDataSource {
   private String getQueryInvoiceDetail() {
 	String sql;
 
-	/* W/O limiting positions per invoice
-	sql = "SELECT c.c_customer_sk, c.c_first_name, c.c_last_name, ";
-	sql += "ca.ca_street_name, ca.ca_street_type, ca.ca_street_number, ca.ca_zip, ca.ca_county, ca.ca_state, ca.ca_country, ";
-	sql += "cs.cs_bill_cdemo_sk, ";
-	sql += "i.i_item_sk, i.i_category, i.i_class, i.i_brand, i.i_product_name, i.i_units, ";
-	sql += "cs.cs_quantity, cs.cs_list_price, cs.cs_ext_list_price ";
-	sql += "FROM catalog_sales AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk ";
-	sql += "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
-	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
-	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") ";
-	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk;";
-	logger.debug("/-> Query used for Invoices: " + sql);
-	*/
+	/*
+	 * W/O limiting positions per invoice sql =
+	 * "SELECT c.c_customer_sk, c.c_first_name, c.c_last_name, "; sql +=
+	 * "ca.ca_street_name, ca.ca_street_type, ca.ca_street_number, ca.ca_zip, ca.ca_county, ca.ca_state, ca.ca_country, "
+	 * ; sql += "cs.cs_bill_cdemo_sk, "; sql +=
+	 * "i.i_item_sk, i.i_category, i.i_class, i.i_brand, i.i_product_name, i.i_units, "
+	 * ; sql += "cs.cs_quantity, cs.cs_list_price, cs.cs_ext_list_price "; sql
+	 * +=
+	 * "FROM catalog_sales AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk "
+	 * ; sql +=
+	 * "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
+	 * sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk "; sql +=
+	 * "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") "; sql +=
+	 * "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk;";
+	 * logger.debug("/-> Query used for Invoices: " + sql);
+	 */
 
 	sql = "SELECT c.c_customer_sk, c.c_first_name, c.c_last_name, ";
 	sql += "ca.ca_street_name, ca.ca_street_type, ca.ca_street_number, ca.ca_zip, ca.ca_county, ca.ca_state, ca.ca_country, ";
@@ -214,19 +221,30 @@ public class InvoiceDataSource {
 	sql += "cs.cs_quantity, cs.cs_list_price, cs.cs_ext_list_price ";
 	sql += "FROM (";
 	sql += "SELECT cs_bill_cdemo_sk, cs_quantity, cs_list_price, cs_ext_list_price, cs_bill_customer_sk, cs_bill_addr_sk, cs_item_sk, ";
-    sql += "@rn := IF(@prev = cs_bill_cdemo_sk, @rn + 1, 1) AS rn, @prev := cs_bill_cdemo_sk ";
-    sql += "FROM catalog_sales ";
-    sql += "JOIN (SELECT @prev := NULL, @rn := 0) AS vars ";
-    sql += "ORDER BY cs_bill_cdemo_sk";
+	sql += "@rn := IF(@prev = cs_bill_cdemo_sk, @rn + 1, 1) AS rn, @prev := cs_bill_cdemo_sk ";
+	sql += "FROM catalog_sales ";
+	sql += "JOIN (SELECT @prev := NULL, @rn := 0) AS vars ";
+	sql += "ORDER BY cs_bill_cdemo_sk";
 	sql += ") AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk ";
 	sql += "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
 	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") AND ";
 	sql += "cs.rn <= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + " ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk, cs.rn;";
-//	logger.debug("/-> Query used for Invoices: " + sql);
+	logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
+  }
+
+  private long getDurationSinceLastTimeStamp() {
+	long duration;
+	long currentTimeStamp;
+
+	currentTimeStamp = System.currentTimeMillis();
+	duration = currentTimeStamp - getLatestTimeStamp();
+	setLatestTimeStamp(currentTimeStamp);
+
+	return duration;
   }
   // --------------------------------------
 }

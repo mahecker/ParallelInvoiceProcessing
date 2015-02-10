@@ -7,12 +7,14 @@
 		<xs:attribute name="border-width">0.5pt</xs:attribute>
 		<xs:attribute name="border-style">solid</xs:attribute>
 		<xs:attribute name="border-color">black</xs:attribute>
+		<xs:attribute name="font-family">sans-serif</xs:attribute>
 	</xs:attribute-set>
 	<xs:attribute-set name="block-style">
 		<xs:attribute name="font-size">  10pt</xs:attribute>
 		<xs:attribute name="line-height">15pt</xs:attribute>
 		<xs:attribute name="start-indent">1mm</xs:attribute>
 		<xs:attribute name="end-indent">  1mm</xs:attribute>
+		<xs:attribute name="font-family">sans-serif</xs:attribute>
 	</xs:attribute-set>
 
 	<xs:template match="/">

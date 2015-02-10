@@ -23,8 +23,9 @@ public class InvoiceDataFormat {
   private Document[] docs;
   private Document doc;
   private ResultSetMetaData rsmd;
+  private long latestTimeStamp;
 
-  private static final int DEFAULT_INVOICE_COUNT = 1;
+  private static final long START_TIME_STAMP = System.currentTimeMillis();
   private static final Logger logger = LogManager.getLogger(InvoiceDataFormat.class);
 
   // --------------------------------------
@@ -32,12 +33,9 @@ public class InvoiceDataFormat {
   // ######################################
   // +++++++++++ Constructors +++++++++++++
   // ######################################
-  public InvoiceDataFormat() {
-	setInvoiceCount(DEFAULT_INVOICE_COUNT);
-  }
-
   public InvoiceDataFormat(int invoiceCount) {
 	setInvoiceCount(invoiceCount);
+	setLatestTimeStamp(START_TIME_STAMP);
   }
 
   // --------------------------------------
@@ -51,6 +49,14 @@ public class InvoiceDataFormat {
 
   public void setInvoiceCount(int invoiceCount) {
 	this.invoiceCount = invoiceCount;
+  }
+  
+  public long getLatestTimeStamp() {
+	return latestTimeStamp;
+  }
+
+  public void setLatestTimeStamp(long latestTimeStamp) {
+	this.latestTimeStamp = latestTimeStamp;
   }
 
   // --------------------------------------
@@ -82,6 +88,7 @@ public class InvoiceDataFormat {
 	  rsmd = rs.getMetaData();
 
 	  hasNextInvoicePosition = rs.next();
+	  logger.info("DataFormat-Setup:\t" + getDurationSinceLastTimeStamp() + "ms.");
 	  while (hasNextInvoicePosition) {
 		if (nextInvoice) {
 		  doc = builder.newDocument();
@@ -115,8 +122,10 @@ public class InvoiceDataFormat {
 		}
 	  }
 	} catch (SQLException | ParserConfigurationException e) {
-	  logger.error("TEST: " + e.getMessage());
+	  logger.error(e.getMessage());
 	}
+	logger.info("Format to XML:\t\t" + getDurationSinceLastTimeStamp() + "ms.");
+	logger.info("Total DataFormat:\t" + (System.currentTimeMillis() - START_TIME_STAMP) + "ms.");
 
 	return docs;
   }
@@ -161,6 +170,17 @@ public class InvoiceDataFormat {
 	positions.appendChild(grossTotal);
 
 	return positions;
+  }
+  
+  private long getDurationSinceLastTimeStamp() {
+	long duration;
+	long currentTimeStamp;
+	
+	currentTimeStamp = System.currentTimeMillis();
+	duration = currentTimeStamp - getLatestTimeStamp();
+	setLatestTimeStamp(currentTimeStamp);
+
+	return duration;
   }
 
   // --------------------------------------
