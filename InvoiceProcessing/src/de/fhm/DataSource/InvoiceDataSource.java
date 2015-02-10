@@ -102,7 +102,7 @@ public class InvoiceDataSource {
   // ######################################
   // +++++++++++ Class-Methods ++++++++++++
   // ######################################
-  public Document[] generateData(long start) {
+  public Document[] getDataFromSource(long start) {
 	Document[] docs = null;
 	ResultSet rs = null;
 	InvoiceDataFormat formatter = null;
@@ -118,7 +118,7 @@ public class InvoiceDataSource {
 		  formatter = new InvoiceDataFormat(getInvoiceCount());
 		  logger.trace("/-> [START] Formating Data...");
 		  lastMeasurement = System.currentTimeMillis();
-		  docs = formatter.formatData(rs);
+		  docs = formatter.formatDataFromResultSet(rs);
 		  logger.trace("/-> [END] Formatting Data: " + (System.currentTimeMillis() - lastMeasurement) + " ms.");
 		} else
 		  logger.error("No Invoice-Positions available!");

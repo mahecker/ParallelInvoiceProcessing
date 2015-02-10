@@ -18,7 +18,7 @@
     <Logger name="de.fhm.DataOutput.InvoiceDataOutput" level="trace" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Logger name="org.apache.fop" level="error" additivity="false">
+    <Logger name="org.apache.fop" level="INFO" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
     <Root level="error">

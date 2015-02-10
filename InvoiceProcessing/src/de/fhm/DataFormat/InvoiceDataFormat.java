@@ -61,7 +61,7 @@ public class InvoiceDataFormat {
 
   // In Anlehnung an:
   // http://www.developer.com/xml/article.php/3329001/Converting-JDBC-Result-Sets-to-XML.htm
-  public Document[] formatData(ResultSet rs) {
+  public Document[] formatDataFromResultSet(ResultSet rs) {
 	DocumentBuilderFactory factory = null;
 	DocumentBuilder builder = null;
 	Element customer = null;
