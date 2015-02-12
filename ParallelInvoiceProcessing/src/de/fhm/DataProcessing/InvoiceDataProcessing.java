@@ -11,8 +11,10 @@ import de.fhm.DataSource.InvoiceDataSource;
 
 public class InvoiceDataProcessing {
   private static final long START_TIME_STAMP = System.currentTimeMillis();
-  public static final int INVOICE_COUNT = 5; // Max-ALL: 153.252 (Max-5POS: 139.373)
+  public static final int INVOICE_COUNT = 10500; // Max-ALL: 153.252 (Max-5POS: 139.373)
   public static final int POSITIONS_PER_INVOICE = 5;
+  public static final int INVOICES_PER_TASK_SOURCE = 10500;
+  public static final int INVOICES_PER_TASK_OUTPUT = 10500;
   public static final String PATH_TO_XSL_FILE = "./src/de/fhm/DataOutput/Invoice_Template.xsl";
   private static final Logger logger = LogManager.getLogger(InvoiceDataProcessing.class);
   
@@ -31,11 +33,12 @@ public class InvoiceDataProcessing {
 	
 	// Measurement starts on instantiating a new class-object
 	InvoiceDataSource source = new InvoiceDataSource();
-	docs = source.getDataFromSource();
+//	docs = source.getDataFromSource();
+	source.getDataFromSource();
 
 	// Measurement starts on instantiating a new class-object
-	InvoiceDataOutput output = new InvoiceDataOutput();
-	output.outputDataFromDocs(docs);
+//	InvoiceDataOutput output = new InvoiceDataOutput();
+//	output.outputDataFromDocs(docs);
 
 	currentTimeStamp = System.currentTimeMillis();
 	duration = currentTimeStamp - START_TIME_STAMP;
